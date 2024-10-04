@@ -5,10 +5,14 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import * as XLSX from "xlsx";
+import { mockData } from "../data/MOCK_DATA";
+import { DownloadTableExcel } from "react-export-table-to-excel";
 
 export const BasicTable = ({ data }) => {
   const [sorting, setSorting] = useState([]);
+  const tableRef = useRef(null);
   const columns = [
     { header: "ID", accessorKey: "id", footer: "ID" },
     {
@@ -41,9 +45,17 @@ export const BasicTable = ({ data }) => {
     },
     onSortingChange: setSorting,
   });
+
+  const handleOnClickExport = () => {
+    const wb = XLSX.utils.book_new(),
+      ws = XLSX.utils.json_to_sheet(mockData);
+    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+    XLSX.writeFile(wb, "MyExcel.xlsx");
+  };
+
   return (
     <div className="container w3-container">
-      <table className="w3-table-all">
+      <table className="w3-table-all" ref={tableRef}>
         <thead>
           {" "}
           {table.getHeaderGroups().map((headerGroup) => (
@@ -75,6 +87,13 @@ export const BasicTable = ({ data }) => {
             </tr>
           ))}
         </tbody>
+        <DownloadTableExcel
+          filename="user table"
+          sheet="users"
+          currentTableRef={tableRef.current}
+        >
+          <button>export from table</button>
+        </DownloadTableExcel>
       </table>
       <div>
         <button onClick={() => table.setPageIndex(0)}>first page</button>
@@ -93,6 +112,7 @@ export const BasicTable = ({ data }) => {
         <button onClick={() => table.setPageIndex(table.getPageCount() - 1)}>
           last page
         </button>
+        <button onClick={handleOnClickExport}>xlsx export</button>
       </div>
     </div>
   );
